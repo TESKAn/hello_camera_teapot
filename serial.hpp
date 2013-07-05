@@ -199,8 +199,8 @@ private:
 	MBMasterWriteMultiRegisterDataStructure MBMCommandTemp;
 	MBMasterLastCommandStructure MBMLastCommand;
 
- int MBMasterQueueIndex;						//index in queue
- int MBMasterQueueLast;						//Last command in queue
+	int MBMasterQueueIndex;						//index in queue
+	int MBMasterQueueLast;						//Last command in queue
 
 
 public:

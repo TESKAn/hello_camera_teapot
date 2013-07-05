@@ -34,4 +34,24 @@ MODEL_T cube_wavefront(void);
 void unload_wavefront(MODEL_T m);
 int draw_wavefront(MODEL_T m, GLuint texture);
 
+enum {VBO_VERTEX, VBO_NORMAL, VBO_TEXTURE, VBO_MAX};
+
+#define MAX_MATERIALS 4
+#define MAX_MATERIAL_NAME 32
+
+typedef struct wavefront_material_s {
+	GLuint vbo[VBO_MAX];
+	int numverts;
+	char name[MAX_MATERIAL_NAME];
+	GLuint texture;
+} WAVEFRONT_MATERIAL_T;
+
+typedef struct wavefront_model_s {
+	WAVEFRONT_MATERIAL_T material[MAX_MATERIALS];
+	int num_materials;
+	GLuint texture;
+	GLfloat translate[3];
+	GLfloat rotate[3];
+} WAVEFRONT_MODEL_T;
+
 #endif

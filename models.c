@@ -45,24 +45,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Private typedefs, macros and constants
 ******************************************************************************/
 
-enum {VBO_VERTEX, VBO_NORMAL, VBO_TEXTURE, VBO_MAX};
-#define MAX_MATERIALS 4
-#define MAX_MATERIAL_NAME 32
-
-typedef struct wavefront_material_s {
-	GLuint vbo[VBO_MAX];
-	int numverts;
-	char name[MAX_MATERIAL_NAME];
-	GLuint texture;
-} WAVEFRONT_MATERIAL_T;
-
-typedef struct wavefront_model_s {
-	WAVEFRONT_MATERIAL_T material[MAX_MATERIALS];
-	int num_materials;
-	GLuint texture;
-} WAVEFRONT_MODEL_T;
-
-
 /******************************************************************************
 Static Data
 ******************************************************************************/
@@ -128,7 +110,7 @@ static int checkGLError()
 static int load_wavefront_mtl(const char *mtlname, WAVEFRONT_MODEL_T *model)
 {
 	char line[256+1];
-	unsigned short pp[54+1];
+	//unsigned short pp[54+1];
 	int i, valid;
 	char texFile[128];
 
@@ -195,7 +177,7 @@ static int load_wavefront_mtl(const char *mtlname, WAVEFRONT_MODEL_T *model)
 
 					// BMP file vars
 					BITMAPINFOHEADER bitmapInfoHeader;
-					char *tex_buf = NULL;
+					unsigned char *tex_buf = NULL;
 
 					tex_buf = LoadBitmapFile(fileName, &bitmapInfoHeader);
 					// Create texture with bitmap data
@@ -259,6 +241,7 @@ static void freebuffer(void *p)
 	free (p);
 }
 
+/*
 static void centre_and_rescale(float *verts, int numvertices)
 {
 	float cx=0.0f, cy=0.0f, cz=0.0f, scale=0.0f;
@@ -294,7 +277,7 @@ static void centre_and_rescale(float *verts, int numvertices)
 		*v = (*v-cz) * scale; v++;
 	}
 }
-
+*/
 static void renormalise(float *verts, int numvertices)
 {
 	int i;
@@ -328,6 +311,16 @@ int draw_wavefront(MODEL_T m, GLuint texture)
 	int i;
 	WAVEFRONT_MODEL_T *model = (WAVEFRONT_MODEL_T *)m;
 
+	glPushMatrix(); //set where to start the current object transformations
+	// Load identity matrix
+	glLoadIdentity();
+	// First rotate
+	glRotatef(model->rotate[0], 1.0, 0.0, 0.0);
+	glRotatef(model->rotate[1], 0.0, 1.0, 0.0);
+	glRotatef(model->rotate[2], 0.0, 0.0, 1.0);
+	// Then translate
+	glTranslatef(model->translate[0], model->translate[1], model->translate[2]);
+
 	for (i=0; i<model->num_materials; i++) {
 		WAVEFRONT_MATERIAL_T *mat = model->material + i;
 		if (mat->texture == -1) continue;
@@ -353,6 +346,9 @@ int draw_wavefront(MODEL_T m, GLuint texture)
 		glDrawArrays(GL_TRIANGLES, 0, mat->numverts);
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	// At end restore matrix
+	glPopMatrix(); //end the current object transformations
+
 	return 0;
 }
 

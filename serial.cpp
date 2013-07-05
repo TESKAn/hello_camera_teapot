@@ -20,7 +20,7 @@
 int uart0_filestream;
 char buf[255];
 struct sigaction saio; 
-static struct serialDataStructure data;
+//static struct serialDataStructure data;
 
 
 
@@ -32,7 +32,7 @@ void *serialThread(void* arg)
 	struct timespec gettime_now;
 	int run = 1;
 	int res = 0;
-	int responseReceived = 0;
+
 	int bytesReadFromBuffer = 0;
 
 	struct serialDataStructure *serialCommData;
@@ -46,6 +46,19 @@ void *serialThread(void* arg)
 	// Store initial time
 	clock_gettime(CLOCK_REALTIME, &gettime_now);
 	start_time = gettime_now.tv_nsec;		//Get nS value
+
+	// Do some delay to stabilize serial port - ca. 100 msec
+	// Because oxFF gets sent on port open and that seems to mess up receive process
+	// on autopilot
+	time_difference = 0;
+	while(time_difference < 100000000)
+	{
+		clock_gettime(CLOCK_REALTIME, &gettime_now);
+		time_difference = gettime_now.tv_nsec - start_time;
+		if (time_difference < 0)
+			time_difference += 1000000000;		//(Rolls over every 1 second)
+	}
+
 
 	sc.EnableConstantTransmission();
 	// Enable constant transmission
@@ -156,14 +169,8 @@ serialComm::serialComm(void)
 	}
 
 	iMBMTimeout = 100000;
-	int iMBMResponseTimeout = 100000;
-	int MBMResendDelayCounter;
-	unsigned char ucSlaveID = 0x33;
-	unsigned int uiMBMasterBufferLocation = 0;	//current location in buffer
-	unsigned int uiMBMasterBufferCount = 0;		//no. of bytes in buffer
-	unsigned char ucMBMasterCRCLOW = 0;
-	unsigned char ucMBMasterCRCHI = 0;
-	unsigned int uiMBMasterProcessState = MBM_IDLE;
+
+
 
 	uart0_filestream = -1;
 	isInitialized = 0;
@@ -301,71 +308,8 @@ int serialComm::serialGetchar (int fd)
 	return ((int)x) & 0xFF ;
 }
 
-void serialComm::readData(unsigned char *rx_buffer, int *bytesRead)
-{
-	int res = 1;
-	int bytesReadFromBuffer = 0;
-	int waitingTime = 0;
-	// If waiting return data
-	if((sendingData == 0)&&(waitingData == 1))
-	{
-		//while(res != 0)
-		{
-			// Check if data is available
-			res = serialDataAvail(uart0_filestream);
-			waitingTime = 0;
-			while(res < expectedBytes)
-			{
-				// Wait 1 msec
-				struct timespec theSleepTime;
-				theSleepTime.tv_sec = 0;
-				theSleepTime.tv_nsec = 1000000;
-				nanosleep(&theSleepTime, 0);
-
-				waitingTime++;
-
-				res = serialDataAvail(uart0_filestream);
-				// If no bytes or waiting more than 100 msec
-				if((res == 0)||(waitingTime > 100))
-				{
-					waitingTime = 0;
-					res = -1;
-					break;
-				}
-			}
-			if(res != -1)
-			{
-				// Read all data
-				unsigned char data[128];
-				int dataCount = 0;
-
-				bytesReadFromBuffer = read (uart0_filestream, &data, res);
-
-				//bytesReadFromBuffer++;
-				for(dataCount = 0; dataCount < bytesReadFromBuffer; dataCount++)
-				{
-					MBMasterRecieveProcess(data[dataCount]);
-				}
-				if(MBMasterData.data.ucDataReady)
-				{
-					res = 0;
-					waitingData = 0;
-					serialFlush(uart0_filestream);
-				}
-			}
-		}
-	}
-	// Else clear buffer
-	else
-	{
-		res = serialDataAvail(uart0_filestream);
-		tcflush(uart0_filestream, TCIFLUSH);
-	}
-}
-
 void serialComm::EnableConstantTransmission(void)
 {
-	int i = 0;
 	//build message
 	MBMasterData.bytes.cdata[0] = 0x33;									//ID = 0x33
 	MBMasterData.bytes.cdata[1] = MBRWMULTIPLEREGISTERS;					//function code
@@ -629,12 +573,9 @@ void serialComm::MBMasterExecute(void)
 //function master send data
 void serialComm::MBMasterSendData(void)
 {
-	unsigned int uiTemp;
 	//store last transmission
 	MBMLastCommand.data.cSlaveID = (char)MBMasterData.bytes.cdata[0];
 	MBMLastCommand.data.cFunctionCode = (char)MBMasterData.bytes.cdata[1];
-	//mark a message has ben sent
-	//MBM_MESSAGESENT = 1;
 	//send
 	sendData(MBMasterData.bytes.cdata, MBMasterData.bytes.uiDataCount);
 }
@@ -651,7 +592,7 @@ void serialComm::MBMasterCRCOnByte(unsigned int ucMsgByte)
 //function master do CRC check on message
 void serialComm::MBMasterCRCOnMessage(int uiDataIndex,unsigned int uiDataLen)
 {
-	int i = 0;
+	unsigned int i = 0;
 	unsigned int uiIndex = 0;
 	ucMBMasterCRCHI = 0xFF ;  	// high byte of CRC initialized 
 	ucMBMasterCRCLOW = 0xFF ;  // low byte of CRC initialized 
