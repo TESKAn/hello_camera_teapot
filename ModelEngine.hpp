@@ -72,6 +72,8 @@ public:
 	int setTranslate(int modelIndex, float x, float y, float z);
 	// Update rotation
 	int setRotate(int model, float pitch, float roll, float yaw);
+	// Update scale
+	int setScale(int modelIndex, float x, float y, float z);
 	// Redraw models
 	int redrawModels();
 

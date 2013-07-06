@@ -26,6 +26,7 @@ struct timespec gettime_now;
 serialDataStructure serialData;
 static pthread_t pSerialThread;
 int navBallModel = 0;
+int cursorModel = 0;
 
 int main()
 {
@@ -38,22 +39,31 @@ int main()
 	ME.initialize();
 
 	// Load shader
+	/*
 	int navballShader = ME.getNextShaderNumber();
 	if(navballShader != -1)
 	{
 		GLuint vertex = ME.loadShader("/opt/vc/src/hello_pi/hello_camera_teapot/SimpleVertex.glsl", GL_VERTEX_SHADER, navballShader);
 		GLuint fragment = ME.loadShader("/opt/vc/src/hello_pi/hello_camera_teapot/SimpleFragment.glsl", GL_FRAGMENT_SHADER, navballShader);
 		GLuint programHandle = ME.linkShaderProgram(navballShader);
-	}
+	}*/
 
 	// Load models
+	cursorModel = ME.loadWavefrontModel("/opt/vc/src/hello_pi/hello_camera_teapot/models/cursor.obj");
 	navBallModel = ME.loadWavefrontModel("/opt/vc/src/hello_pi/hello_camera_teapot/models/navball.obj");
+	
 
 	// Set navball shader
-	ME.setModelShader(navBallModel, navballShader);
+	//ME.setModelShader(navBallModel, navballShader);
 
-	// Set position of navBall model
-	//ME.setTranslate(navBallModel, 1.0f, 0.0f, 0.0f);
+	// Set position and scale of navBall model
+	ME.setTranslate(navBallModel, 0.0f, -8.0f, 0.0f);
+	ME.setScale(navBallModel, 10.0f, 10.0f, 10.0f);
+
+	// Set position and scale of cursor model
+	ME.setTranslate(cursorModel, 0.0f, -0.1f, 39.5f);
+	ME.setScale(cursorModel, 1.0f, 1.0f, 1.0f);
+	ME.setRotate(cursorModel, 0.0f, 90.0f, 0.0f);
 
 	pthread_create(&pSerialThread, NULL, serialThread, (void *) &serialData);
 

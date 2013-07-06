@@ -56,6 +56,8 @@ typedef struct wavefront_model_s {
 	GLfloat translate[3];
 	// Rotation matrix
 	GLfloat rotate[3];
+	// Scale matrix
+	GLfloat scale[3];
 	// Shader program to use
 	int shader;
 } WAVEFRONT_MODEL_T;

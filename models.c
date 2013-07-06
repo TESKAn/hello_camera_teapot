@@ -320,15 +320,20 @@ int draw_wavefront(MODEL_T m, GLuint texture)
 	int i;
 	WAVEFRONT_MODEL_T *model = (WAVEFRONT_MODEL_T *)m;
 
-	glPushMatrix(); //set where to start the current object transformations
+	// Save old matrix
+	glPushMatrix();
+
 	// Load identity matrix
-	glLoadIdentity();
-	// First rotate
+	//glLoadIdentity();
+
+	// Move model
+	glTranslatef(model->translate[0], model->translate[1], model->translate[2]);
+	// Rotate model
 	glRotatef(model->rotate[0], 1.0, 0.0, 0.0);
 	glRotatef(model->rotate[1], 0.0, 1.0, 0.0);
 	glRotatef(model->rotate[2], 0.0, 0.0, 1.0);
-	// Then translate
-	glTranslatef(model->translate[0], model->translate[1], model->translate[2]);
+	// Scale model
+	glScalef(model->scale[0], model->scale[1], model->scale[2]);
 
 	for (i=0; i<model->num_materials; i++) {
 		WAVEFRONT_MATERIAL_T *mat = model->material + i;
@@ -353,11 +358,10 @@ int draw_wavefront(MODEL_T m, GLuint texture)
 			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
 		glDrawArrays(GL_TRIANGLES, 0, mat->numverts);
-		checkGLError();
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	// At end restore matrix
-	glPopMatrix(); //end the current object transformations
+	glPopMatrix();
 	return 0;
 }
 
@@ -391,7 +395,7 @@ static int load_wavefront_obj(const char *modelname, WAVEFRONT_MODEL_T *model, s
 
 	while (valid > 0) {
 		char *s, *end = line;
-
+		/*
 		while((end-line < valid) && *end != '\n' && *end != '\r')
 			end++;
 		*end++ = 0;
@@ -404,6 +408,20 @@ static int load_wavefront_obj(const char *modelname, WAVEFRONT_MODEL_T *model, s
 		s = line;
 
 		if (s[strlen(s)-1] == 10) s[strlen(s)-1]=0;
+		*/
+		// Seek end of line
+		while((end-line < valid) && *end != '\n' && *end != '\r')
+			end++;
+		*end++ = 0;
+
+		// Remove all stray \r\n's
+		while((end-line < valid) && (*end == '\n' || *end == '\r'))
+			end++;
+
+		s = line;
+
+		if (s[strlen(s)-1] == 10) s[strlen(s)-1]=0;
+
 		switch (s[0]) {
 		case '#': break; // comment
 		case '\r': case '\n': case '\0': break; // blank line

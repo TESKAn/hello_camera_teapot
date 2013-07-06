@@ -43,9 +43,6 @@ int modelEngine::setModelShader(int modelIndex, int shaderIndex)
 {
 	WAVEFRONT_MODEL_T *model = (WAVEFRONT_MODEL_T *)models[modelIndex];
 	model->shader = shaderIndex;
-
-//	glUseProgram (shaderIndex);
-//	checkGLError();
 }
 
 int modelEngine::getNextShaderNumber()
@@ -67,10 +64,7 @@ GLuint modelEngine::linkShaderProgram(int shaderIndex)
 	glAttachShader(programHandle, shaders[shaderIndex].vertexShader);
 	glAttachShader(programHandle, shaders[shaderIndex].fragmentShader);
 	glLinkProgram(programHandle);
-	checkGLError();
-
 	showprogramlog(programHandle);
-
 	shaders[shaderIndex].program = programHandle;
 
 	// Get and store attributes
@@ -87,9 +81,7 @@ GLuint modelEngine::linkShaderProgram(int shaderIndex)
 	}
 	// Enable attribute
 	glVertexAttribPointer(shaders[shaderIndex].Position, 4, GL_FLOAT, 0, 16, 0);
-	checkGLError();
     glEnableVertexAttribArray(shaders[shaderIndex].Position);
-	checkGLError();
 
 	numShaders++;
 
@@ -172,27 +164,39 @@ int modelEngine::setTranslate(int modelIndex, float x, float y, float z)
 int modelEngine::setRotate(int modelIndex, float pitch, float roll, float yaw)
 {
 	WAVEFRONT_MODEL_T *model = (WAVEFRONT_MODEL_T *)models[modelIndex];
-	model->rotate[0] = (GLfloat)pitch;
-	model->rotate[1] = (GLfloat)roll;
+	// Rotate around X = roll
+	model->rotate[0] = (GLfloat)roll;
+	// Rotate around Y = pitch
+	model->rotate[1] = (GLfloat)pitch;
+	// Rotate around Z = yaw
 	model->rotate[2] = (GLfloat)yaw;
+	return 0;
+}
+
+int modelEngine::setScale(int modelIndex, float x, float y, float z)
+{
+	WAVEFRONT_MODEL_T *model = (WAVEFRONT_MODEL_T *)models[modelIndex];
+	// Rotate around X = roll
+	model->scale[0] = (GLfloat)x;
+	// Rotate around Y = pitch
+	model->scale[1] = (GLfloat)y;
+	// Rotate around Z = yaw
+	model->scale[2] = (GLfloat)z;
 	return 0;
 }
 
 int modelEngine::redrawModels()
 {
 	// Set matrix mode
+
 	glMatrixMode(GL_MODELVIEW);
-	checkGLError();
 	// Move camera
 	glLoadIdentity();
-	checkGLError();
 	// move camera back to see the cube
 	glTranslatef(0.f, 0.f, -40);
-	checkGLError();
 
 	// Start with a clear screen
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	checkGLError();
 
 	// Cycle through all models and redraw them
 	WAVEFRONT_MODEL_T *modelData = NULL; 
@@ -202,7 +206,6 @@ int modelEngine::redrawModels()
 		draw_wavefront(models[i], NULL);
 	}
 	eglSwapBuffers(state.display, state.surface);
-	checkGLError();
 	return 0;
 }
 

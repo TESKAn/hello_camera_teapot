@@ -79,8 +79,8 @@ void modelEngine_init_ogl(MODEL_STATE_T *state)
 	assert(EGL_FALSE != result);
 
 	// create an EGL rendering context
-	state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, context_attributes);
-	//state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, NULL);
+	//state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, context_attributes);
+	state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, NULL);
 	assert(state->context!=EGL_NO_CONTEXT);
 
 	// create an EGL window surface
