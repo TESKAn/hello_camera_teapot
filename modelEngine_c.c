@@ -12,7 +12,7 @@
 #include "GLES/gl.h"
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
-
+#include "GLES2/gl2.h"
 
 #include "modelEngine_c.h"
 
@@ -53,6 +53,12 @@ void modelEngine_init_ogl(MODEL_STATE_T *state)
 		EGL_NONE
 	};
 
+	static const EGLint context_attributes[] = 
+	{
+		EGL_CONTEXT_CLIENT_VERSION, 2,
+		EGL_NONE
+	};
+
 	EGLConfig config;
 
 	// get an EGL display connection
@@ -68,8 +74,13 @@ void modelEngine_init_ogl(MODEL_STATE_T *state)
 	result = eglSaneChooseConfigBRCM(state->display, attribute_list, &config, 1, &num_config);
 	assert(EGL_FALSE != result);
 
+	// Bind API
+	result = eglBindAPI(EGL_OPENGL_ES_API);
+	assert(EGL_FALSE != result);
+
 	// create an EGL rendering context
-	state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, NULL);
+	state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, context_attributes);
+	//state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, NULL);
 	assert(state->context!=EGL_NO_CONTEXT);
 
 	// create an EGL window surface
@@ -108,11 +119,14 @@ void modelEngine_init_ogl(MODEL_STATE_T *state)
 	// Set background color and clear buffers
 	// Background alfa = 0
 	glClearColor(0.15f, 0.25f, 0.35f, 0.0f);
+	checkGLError();
 
 	// Enable back face culling.
 	glEnable(GL_CULL_FACE);
+	checkGLError();
 
 	glMatrixMode(GL_MODELVIEW);
+	checkGLError();
 }
 
 /***********************************************************
@@ -133,22 +147,25 @@ void init_model_proj(MODEL_STATE_T *state)
 	float hht;
 	float hwd;
 
-	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
+	//glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
+	//checkGLError();
 
 	glViewport(0, 0, (GLsizei)state->screen_width, (GLsizei)state->screen_height);
+	checkGLError();
 
 	glMatrixMode(GL_PROJECTION);
+	checkGLError();
 	glLoadIdentity();
+	checkGLError();
 
 	hht = nearp * (float)tan(45.0 / 2.0 / 180.0 * M_PI);
 	hwd = hht * (float)state->screen_width / (float)state->screen_height;
 
 	glFrustumf(-hwd, hwd, -hht, hht, nearp, farp);
+	checkGLError();
 
 	glEnableClientState( GL_VERTEX_ARRAY );
-	//glVertexPointer( 3, GL_BYTE, 0, quadx );
-
-	//reset_model(state);
+	checkGLError();
 }
 /***********************************************************
 * Name: init_textures
@@ -165,6 +182,7 @@ void init_model_proj(MODEL_STATE_T *state)
 void init_textures(MODEL_STATE_T *state)
 {
 	glEnable(GL_TEXTURE_2D);
+	checkGLError();
 }
 
 /***********************************************************

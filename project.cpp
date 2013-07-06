@@ -38,16 +38,20 @@ int main()
 	ME.initialize();
 
 	// Load shader
-	GLuint vertex = ME.loadShader("/opt/vc/src/hello_pi/hello_camera_teapot/SimpleVertex.glsl", GL_VERTEX_SHADER);
-	GLuint fragment = ME.loadShader("/opt/vc/src/hello_pi/hello_camera_teapot/SimpleFragment.glsl", GL_FRAGMENT_SHADER);
-	GLuint programHandle = ME.linkShaderProgram(vertex, fragment);
-
-	GLuint vertex1 = ME.loadShader("/opt/vc/src/hello_pi/hello_camera_teapot/SimpleVertex.glsl", GL_VERTEX_SHADER);
-	GLuint fragment1 = ME.loadShader("/opt/vc/src/hello_pi/hello_camera_teapot/SimpleFragment.glsl", GL_FRAGMENT_SHADER);
-	GLuint programHandle1 = ME.linkShaderProgram(vertex, fragment);
+	int navballShader = ME.getNextShaderNumber();
+	if(navballShader != -1)
+	{
+		GLuint vertex = ME.loadShader("/opt/vc/src/hello_pi/hello_camera_teapot/SimpleVertex.glsl", GL_VERTEX_SHADER, navballShader);
+		GLuint fragment = ME.loadShader("/opt/vc/src/hello_pi/hello_camera_teapot/SimpleFragment.glsl", GL_FRAGMENT_SHADER, navballShader);
+		GLuint programHandle = ME.linkShaderProgram(navballShader);
+	}
 
 	// Load models
 	navBallModel = ME.loadWavefrontModel("/opt/vc/src/hello_pi/hello_camera_teapot/models/navball.obj");
+
+	// Set navball shader
+	ME.setModelShader(navBallModel, navballShader);
+
 	// Set position of navBall model
 	//ME.setTranslate(navBallModel, 1.0f, 0.0f, 0.0f);
 

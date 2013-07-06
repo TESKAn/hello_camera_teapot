@@ -58,7 +58,7 @@ Static Function Definitions
 ******************************************************************************/
 
 // OpenGL error checker
-static int checkGLError()
+int checkGLError()
 {
 	const char * errorString = NULL;
 	int retVal = -1;
@@ -66,6 +66,7 @@ static int checkGLError()
 	switch( glGetError() )
 	{
 	case GL_NO_ERROR:
+		errorString = "NO ERROR";
 		retVal = 0;
 		break;
 
@@ -98,6 +99,10 @@ static int checkGLError()
 	{
 		printf( "%s\n", errorString );
 		assert( retVal );
+	}
+	else if(retVal == 0)
+	{
+		printf( "%s\n", errorString );
 	}
 
 	return retVal;
@@ -216,10 +221,14 @@ static int load_wavefront_mtl(const char *mtlname, WAVEFRONT_MODEL_T *model)
 
 static void create_vbo(GLenum type, GLuint *vbo, int size, void *data)
 {
+	// Generate buffer
 	glGenBuffers(1, vbo);
 	vc_assert(*vbo);
+	// Bind buffer
 	glBindBuffer(type, *vbo);
+	// Create buffer data
 	glBufferData(type, size, data, GL_STATIC_DRAW);
+	// Unbind buffer
 	glBindBuffer(type, 0);     
 }
 
@@ -344,11 +353,11 @@ int draw_wavefront(MODEL_T m, GLuint texture)
 			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
 		glDrawArrays(GL_TRIANGLES, 0, mat->numverts);
+		checkGLError();
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	// At end restore matrix
 	glPopMatrix(); //end the current object transformations
-
 	return 0;
 }
 
@@ -614,6 +623,13 @@ MODEL_T load_wavefront(const char *modelname, const char *texturename)
 	vc_assert(offset == numverts);
 	freebuffer(temp);
 	freebuffer(m);
+	model->rotate[0] = 0.0f;
+	model->rotate[1] = 0.0f;
+	model->rotate[2] = 0.0f;
+	model->translate[0] = 0.0f;
+	model->translate[1] = 0.0f;
+	model->translate[2] = 0.0f;
+	model->shader = -1;
 	return (MODEL_T)model;
 }
 

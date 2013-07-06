@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MODELS_T
 typedef struct opqaue_model_s * MODEL_T;
 
+int checkGLError();
 MODEL_T load_wavefront(const char *modelname, const char *texturename);
 MODEL_T cube_wavefront(void);
 void unload_wavefront(MODEL_T m);
@@ -44,14 +45,19 @@ typedef struct wavefront_material_s {
 	int numverts;
 	char name[MAX_MATERIAL_NAME];
 	GLuint texture;
+	GLuint attr_vertex;
 } WAVEFRONT_MATERIAL_T;
 
 typedef struct wavefront_model_s {
 	WAVEFRONT_MATERIAL_T material[MAX_MATERIALS];
 	int num_materials;
 	GLuint texture;
+	// Translation matrix
 	GLfloat translate[3];
+	// Rotation matrix
 	GLfloat rotate[3];
+	// Shader program to use
+	int shader;
 } WAVEFRONT_MODEL_T;
 
 #endif

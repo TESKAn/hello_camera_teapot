@@ -22,36 +22,82 @@ extern "C"
 }
 extern "C++" 
 {
-#include "ModelEngine.hpp"
+	#include "ModelEngine.hpp"
 }
 
 // Shader data
-char shaderDataRAM[2048];
+char shaderDataRAM1[2048];
+char shaderDataRAM2[2048];
+
+int shaderDataLengthRAM1 = 0;
+int shaderDataLengthRAM2 = 0;
 
 
-const char * shaderDataConst = shaderDataRAM;
+const char * shaderDataConst1 = shaderDataRAM1;
+const char * shaderDataConst2 = shaderDataRAM2;
 
-GLuint modelEngine::linkShaderProgram(GLuint vertexShader, GLuint fragmentShader)
+const int* shaderDataLength1 = &shaderDataLengthRAM1;
+const int* shaderDataLength2 = &shaderDataLengthRAM2;
+
+int modelEngine::setModelShader(int modelIndex, int shaderIndex)
 {
-	GLuint programHandle = glCreateProgram();
-	glAttachShader(programHandle, vertexShader);
-	glAttachShader(programHandle, fragmentShader);
-	glLinkProgram(programHandle);
+	WAVEFRONT_MODEL_T *model = (WAVEFRONT_MODEL_T *)models[modelIndex];
+	model->shader = shaderIndex;
 
+//	glUseProgram (shaderIndex);
+//	checkGLError();
+}
 
-	GLint linkSuccess;
-	glGetProgramiv(programHandle, GL_LINK_STATUS, &linkSuccess);
-	if (linkSuccess == GL_FALSE) 
+int modelEngine::getNextShaderNumber()
+{
+	if(numShaders < MAX_SHADER_PROGRAMS)
 	{
-		GLchar messages[256];
-		glGetProgramInfoLog(programHandle, sizeof(messages), 0, &messages[0]);
+		return numShaders;
+	}
+	else
+	{
 		return -1;
 	}
+}
+
+
+GLuint modelEngine::linkShaderProgram(int shaderIndex)
+{
+	GLuint programHandle = glCreateProgram();
+	glAttachShader(programHandle, shaders[shaderIndex].vertexShader);
+	glAttachShader(programHandle, shaders[shaderIndex].fragmentShader);
+	glLinkProgram(programHandle);
+	checkGLError();
+
+	showprogramlog(programHandle);
+
+	shaders[shaderIndex].program = programHandle;
+
+	// Get and store attributes
+	GLint attribLocation = 0;
+	attribLocation = glGetAttribLocation(programHandle, "Position");
+	if(attribLocation != GL_INVALID_OPERATION)
+	{
+		shaders[shaderIndex].Position = attribLocation;
+	}
+	attribLocation = glGetAttribLocation(programHandle, "SourceColor");
+	if(attribLocation != GL_INVALID_OPERATION)
+	{
+		shaders[shaderIndex].SourceColor = attribLocation;
+	}
+	// Enable attribute
+	glVertexAttribPointer(shaders[shaderIndex].Position, 4, GL_FLOAT, 0, 16, 0);
+	checkGLError();
+    glEnableVertexAttribArray(shaders[shaderIndex].Position);
+	checkGLError();
+
+	numShaders++;
+
 	return programHandle;
 }
 
 
-GLuint modelEngine::loadShader(char *shaderFile, GLenum shaderType)
+GLuint modelEngine::loadShader(char *shaderFile, GLenum shaderType, int shaderIndex)
 {
 	FILE* shaderDataFile;
 	GLuint shaderHandle = 0;
@@ -71,33 +117,34 @@ GLuint modelEngine::loadShader(char *shaderFile, GLenum shaderType)
 		if(shaderDataFile)
 		{
 			// Read data from file
-			char data[2048];
-			numBytesRead = fread(shaderDataRAM, 1, st.st_size, shaderDataFile);
+			numBytesRead = fread(shaderDataRAM1, 1, st.st_size, shaderDataFile);
 
-			shaderDataRAM[numBytesRead] = 0;
+			shaderDataLengthRAM1 = numBytesRead;
+
 			// Create shader
 			shaderHandle = glCreateShader(shaderType); 
 			// Set shader source
-			glShaderSource(shaderHandle, 1, &shaderDataConst, NULL);
+			glShaderSource(shaderHandle, 1, &shaderDataConst1, shaderDataLength1);
 			// Compile shader
 			glCompileShader(shaderHandle);
+			checkGLError();
 			// Check success
-			GLint compileSuccess;
-			glGetShaderiv(shaderHandle, GL_COMPILE_STATUS, &compileSuccess);
-			if (compileSuccess == GL_FALSE) 
-			{
-				GLchar messages[256];
-				glGetShaderInfoLog(shaderHandle, sizeof(messages), 0, &messages[0]);
-				return -1;
-			}
-
+			showlog(shaderHandle);
 
 			fclose(shaderDataFile);
 		}
 		// If successfull
-		if(models[numShaders] != 0)
+		if(shaderHandle != 0)
 		{
-			numShaders++;
+			// Store shader 
+			if(shaderType == GL_VERTEX_SHADER)
+			{
+				shaders[shaderIndex].vertexShader = shaderHandle;
+			}
+			else
+			{
+				shaders[shaderIndex].fragmentShader = shaderHandle;
+			}
 			// Return shader handle
 			return shaderHandle;
 		}
@@ -135,13 +182,17 @@ int modelEngine::redrawModels()
 {
 	// Set matrix mode
 	glMatrixMode(GL_MODELVIEW);
+	checkGLError();
 	// Move camera
 	glLoadIdentity();
+	checkGLError();
 	// move camera back to see the cube
 	glTranslatef(0.f, 0.f, -40);
+	checkGLError();
 
 	// Start with a clear screen
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	checkGLError();
 
 	// Cycle through all models and redraw them
 	WAVEFRONT_MODEL_T *modelData = NULL; 
@@ -151,7 +202,7 @@ int modelEngine::redrawModels()
 		draw_wavefront(models[i], NULL);
 	}
 	eglSwapBuffers(state.display, state.surface);
-
+	checkGLError();
 	return 0;
 }
 
@@ -180,10 +231,33 @@ int modelEngine::loadWavefrontModel(char *path)
 	}
 }
 
+void modelEngine::showlog(GLint shader)
+{
+   // Prints the compile log for a shader
+   char log[1024];
+   glGetShaderInfoLog(shader,sizeof log,NULL,log);
+   printf("%d:shader:\n%s\n", shader, log);
+}
+
+void modelEngine::showprogramlog(GLint shader)
+{
+   // Prints the information log for a program object
+   char log[1024];
+   glGetProgramInfoLog(shader,sizeof log,NULL,log);
+   printf("%d:program:\n%s\n", shader, log);
+}
+
+
 void modelEngine::initialize(void)
 {
 	numModels = 0;
+	numShaders = 0;
 	modelEngine_init_ogl(&state);
 	init_model_proj(&state);
-	init_textures(&state);
+	glEnable(GL_TEXTURE_2D);
+	checkGLError();
+	//init_textures(&state);
+
+	// Shaders test
+	//init_shaders(&state);
 }
