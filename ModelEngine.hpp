@@ -5,6 +5,11 @@
 #include "GLES/gl.h"
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
+
+#include "fonts/texture-font.h"
+#include "fonts/texture-atlas.h"
+#include "fonts/vector.h"
+
 // Include models.h - else wont recognize MODEL_T
 extern "C" 
 {
@@ -60,6 +65,11 @@ private:
 
 public:
 	// Functions
+	// Add text
+	//void add_text( vertex_buffer_t * buffer, texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen );
+	void add_text( texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen , GLuint vertexBuffer );
+	// Initialize fonts
+	int initFonts();
 	// Set model shader program
 	int setModelShader(int modelIndex, int shaderIndex);
 	// Check if we have room for additional shader program
@@ -71,9 +81,11 @@ public:
 	// Update translation
 	int setTranslate(int modelIndex, float x, float y, float z);
 	// Update rotation
-	int setRotate(int model, float pitch, float roll, float yaw);
+	int setRotate(int modelIndex, float x, float y, float z);
 	// Update scale
 	int setScale(int modelIndex, float x, float y, float z);
+	// Enable/disable model draw
+	int enableModel(int modelIndex, int enable);
 	// Redraw models
 	int redrawModels();
 
@@ -86,6 +98,8 @@ public:
 	int loadWavefrontModel(char* path);
 	// Initialize OGL
 	void init_ogl(MODEL_STATE_T *state);
+	// Rotate model around specified axis by specified amount
+	int rotateModelIncrement(int modelIndex, char axis, float value);
 };
 
 

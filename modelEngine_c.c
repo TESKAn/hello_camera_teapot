@@ -43,13 +43,16 @@ void modelEngine_init_ogl(MODEL_STATE_T *state)
 
 	static const EGLint attribute_list[] =
 	{
+		EGL_SAMPLES, 4,
 		EGL_RED_SIZE, 8,
 		EGL_GREEN_SIZE, 8,
 		EGL_BLUE_SIZE, 8,
 		EGL_ALPHA_SIZE, 8,
+		//EGL_BUFFER_SIZE,        WINDOW_BUFFER_SIZE,
 		EGL_DEPTH_SIZE, 16,
-		//EGL_SAMPLES, 4,
-		EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+		EGL_STENCIL_SIZE,        0,
+		EGL_SURFACE_TYPE,		EGL_WINDOW_BIT,
+		EGL_RENDERABLE_TYPE,    EGL_OPENGL_ES2_BIT,
 		EGL_NONE
 	};
 
@@ -119,14 +122,11 @@ void modelEngine_init_ogl(MODEL_STATE_T *state)
 	// Set background color and clear buffers
 	// Background alfa = 0
 	glClearColor(0.15f, 0.25f, 0.35f, 0.0f);
-	checkGLError();
 
 	// Enable back face culling.
 	glEnable(GL_CULL_FACE);
-	checkGLError();
 
 	glMatrixMode(GL_MODELVIEW);
-	checkGLError();
 }
 
 /***********************************************************
@@ -151,21 +151,21 @@ void init_model_proj(MODEL_STATE_T *state)
 	//checkGLError();
 
 	glViewport(0, 0, (GLsizei)state->screen_width, (GLsizei)state->screen_height);
-	checkGLError();
+	//checkGLError();
 
 	glMatrixMode(GL_PROJECTION);
-	checkGLError();
+	//checkGLError();
 	glLoadIdentity();
-	checkGLError();
+	//checkGLError();
 
 	hht = nearp * (float)tan(45.0 / 2.0 / 180.0 * M_PI);
 	hwd = hht * (float)state->screen_width / (float)state->screen_height;
 
 	glFrustumf(-hwd, hwd, -hht, hht, nearp, farp);
-	checkGLError();
+	//checkGLError();
 
 	glEnableClientState( GL_VERTEX_ARRAY );
-	checkGLError();
+	//checkGLError();
 }
 /***********************************************************
 * Name: init_textures

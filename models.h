@@ -60,6 +60,8 @@ typedef struct wavefront_model_s {
 	GLfloat scale[3];
 	// Shader program to use
 	int shader;
+	// Mark if model is enabled for display
+	int modelEnabled;
 } WAVEFRONT_MODEL_T;
 
 #endif

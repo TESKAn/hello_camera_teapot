@@ -886,7 +886,6 @@ void initApp()
 
 							if (mmal_port_send_buffer(encoder_output_port, buffer)!= MMAL_SUCCESS)
 								vcos_log_error("Unable to send a buffer to encoder output port (%d)", q);
-
 						}
 					}
 				}
@@ -901,31 +900,8 @@ void initApp()
 		// Clear application state
 		memset( state, 0, sizeof( *state ) );
 
-		/*
-		// Start OGLES
-		init_ogl(state);
-
-		// Setup the model world
-		init_model_proj(state);
-
-		// initialise the OGLES texture(s)
-		init_textures(state);
-
-		state->model = load_wavefront("/opt/vc/src/hello_pi/hello_camera_teapot/models/navball.obj", NULL);
-		*/
 		return;
-		/*
-		while (!terminate)
-		{
-			update_model(state);
-			redraw_scene(state);
-		}
 
-		
-
-		if (stateCamera.verbose)
-			fprintf(stderr, "Finished capture\n");
-			*/
 error:
 
 		mmal_status_to_int(status);

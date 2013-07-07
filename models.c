@@ -188,17 +188,14 @@ static int load_wavefront_mtl(const char *mtlname, WAVEFRONT_MODEL_T *model)
 					// Create texture with bitmap data
 
 					glGenTextures(1, &model->texture);
-					checkGLError();
 					glBindTexture(GL_TEXTURE_2D, model->texture);
-					checkGLError();
 					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, bitmapInfoHeader.biWidth, bitmapInfoHeader.biHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_buf);
+					// Generate texture mipmap
+					glGenerateMipmap(GL_TEXTURE_2D);
 					checkGLError();
 					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLfloat)GL_NEAREST);
-					checkGLError();
 					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLfloat)GL_NEAREST);
-					checkGLError();
 					glBindTexture(GL_TEXTURE_2D, 0);
-					checkGLError();
 				}
 			}
 
@@ -319,49 +316,53 @@ int draw_wavefront(MODEL_T m, GLuint texture)
 {
 	int i;
 	WAVEFRONT_MODEL_T *model = (WAVEFRONT_MODEL_T *)m;
+	
+	// Check if model is enabled
+	if(model->modelEnabled)
+	{
+		// Save old matrix
+		glPushMatrix();
 
-	// Save old matrix
-	glPushMatrix();
+		// Load identity matrix
+		//glLoadIdentity();
 
-	// Load identity matrix
-	//glLoadIdentity();
+		// Move model
+		glTranslatef(model->translate[0], model->translate[1], model->translate[2]);
+		// Rotate model
+		glRotatef(model->rotate[0], 1.0, 0.0, 0.0);
+		glRotatef(model->rotate[1], 0.0, 1.0, 0.0);
+		glRotatef(model->rotate[2], 0.0, 0.0, 1.0);
+		// Scale model
+		glScalef(model->scale[0], model->scale[1], model->scale[2]);
 
-	// Move model
-	glTranslatef(model->translate[0], model->translate[1], model->translate[2]);
-	// Rotate model
-	glRotatef(model->rotate[0], 1.0, 0.0, 0.0);
-	glRotatef(model->rotate[1], 0.0, 1.0, 0.0);
-	glRotatef(model->rotate[2], 0.0, 0.0, 1.0);
-	// Scale model
-	glScalef(model->scale[0], model->scale[1], model->scale[2]);
-
-	for (i=0; i<model->num_materials; i++) {
-		WAVEFRONT_MATERIAL_T *mat = model->material + i;
-		if (mat->texture == -1) continue;
-		glBindTexture(GL_TEXTURE_2D, mat->texture ? mat->texture:texture);
-		if (mat->vbo[VBO_VERTEX]) {
-			glBindBuffer(GL_ARRAY_BUFFER, mat->vbo[VBO_VERTEX]);
-			glVertexPointer(3, GL_FLOAT, 0, NULL);
+		for (i=0; i<model->num_materials; i++) {
+			WAVEFRONT_MATERIAL_T *mat = model->material + i;
+			if (mat->texture == -1) continue;
+			glBindTexture(GL_TEXTURE_2D, mat->texture ? mat->texture:texture);
+			if (mat->vbo[VBO_VERTEX]) {
+				glBindBuffer(GL_ARRAY_BUFFER, mat->vbo[VBO_VERTEX]);
+				glVertexPointer(3, GL_FLOAT, 0, NULL);
+			}
+			if (mat->vbo[VBO_NORMAL]) {   
+				glEnableClientState(GL_NORMAL_ARRAY);
+				glBindBuffer(GL_ARRAY_BUFFER, mat->vbo[VBO_NORMAL]);
+				glNormalPointer(GL_FLOAT, 0, NULL);
+			} else {
+				glDisableClientState(GL_NORMAL_ARRAY);
+			}
+			if (mat->vbo[VBO_TEXTURE]) {   
+				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+				glBindBuffer(GL_ARRAY_BUFFER, mat->vbo[VBO_TEXTURE]);
+				glTexCoordPointer(2, GL_FLOAT, 0, NULL);
+			} else {
+				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			}
+			glDrawArrays(GL_TRIANGLES, 0, mat->numverts);
 		}
-		if (mat->vbo[VBO_NORMAL]) {   
-			glEnableClientState(GL_NORMAL_ARRAY);
-			glBindBuffer(GL_ARRAY_BUFFER, mat->vbo[VBO_NORMAL]);
-			glNormalPointer(GL_FLOAT, 0, NULL);
-		} else {
-			glDisableClientState(GL_NORMAL_ARRAY);
-		}
-		if (mat->vbo[VBO_TEXTURE]) {   
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-			glBindBuffer(GL_ARRAY_BUFFER, mat->vbo[VBO_TEXTURE]);
-			glTexCoordPointer(2, GL_FLOAT, 0, NULL);
-		} else {
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		}
-		glDrawArrays(GL_TRIANGLES, 0, mat->numverts);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		// At end restore matrix
+		glPopMatrix();
 	}
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	// At end restore matrix
-	glPopMatrix();
 	return 0;
 }
 
@@ -641,13 +642,18 @@ MODEL_T load_wavefront(const char *modelname, const char *texturename)
 	vc_assert(offset == numverts);
 	freebuffer(temp);
 	freebuffer(m);
+	// Set model default values
 	model->rotate[0] = 0.0f;
 	model->rotate[1] = 0.0f;
 	model->rotate[2] = 0.0f;
 	model->translate[0] = 0.0f;
 	model->translate[1] = 0.0f;
 	model->translate[2] = 0.0f;
+	model->scale[0] = 0.0f;
+	model->scale[1] = 0.0f;
+	model->scale[2] = 0.0f;
 	model->shader = -1;
+	model->modelEnabled = 1;
 	return (MODEL_T)model;
 }
 
