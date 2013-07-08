@@ -124,7 +124,7 @@ void modelEngine_init_ogl(MODEL_STATE_T *state)
 	glClearColor(0.15f, 0.25f, 0.35f, 0.0f);
 
 	// Enable back face culling.
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 
 	glMatrixMode(GL_MODELVIEW);
 }

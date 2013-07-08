@@ -73,7 +73,9 @@ void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, 
             float t0 = glyph->t0;
             float s1 = glyph->s1;
 			float t1 = glyph->t1;
-			GLuint indices[6] = {0,1,2, 0,2,3};
+
+			//GLuint indices[6] = {0,1,2, 0,2,3};
+			GLfloat indices[6] = {0,1,2, 0,2,3};
 			GLfloat vertexCoordinates[] = {
 				x0,y0,0,
 				x0,y1,0,
@@ -95,6 +97,16 @@ void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, 
 				s1,t1,
 				s1,t0,
 			};
+
+			GLfloat colors[] = {
+				r, g, b, a,
+				r, g, b, a,
+				r, g, b, a,
+				r, g, b, a,
+				r, g, b, a,
+				r, g, b, a,
+			};
+
             GLfloat vertices[] = {
               x0,y0,0,
               s0,t0,
@@ -121,6 +133,7 @@ void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, 
 			// Generate buffer
 			GLuint verticeBuffer = 0;
 			GLuint textureBuffer = 0;
+			GLuint colorBuffer = 0;
 
 			// Generate vertex buffer
 			glGenBuffers(1, &verticeBuffer);
@@ -138,42 +151,55 @@ void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, 
 			glBufferData(GL_ARRAY_BUFFER, 48, &textureCoordinates, GL_STATIC_DRAW);
 			// Unbind buffer
 			glBindBuffer(GL_ARRAY_BUFFER, 0); 
+			// Generate color buffer
+			glGenBuffers(1, &colorBuffer);
+			// Bind buffer
+			glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+			// Create buffer data
+			glBufferData(GL_ARRAY_BUFFER, 48, &colors, GL_STATIC_DRAW);
+			// Unbind buffer
+			glBindBuffer(GL_ARRAY_BUFFER, 0); 
 
-			glDisableClientState(GL_NORMAL_ARRAY);
+			glEnableClientState(GL_COLOR_ARRAY);
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 			glEnableClientState( GL_VERTEX_ARRAY );
 
-			glPushMatrix();
-
-
-			// Move model
-			glTranslatef(0.0f,0.0f,-20.0f);
-			// Rotate model
-			glRotatef(0.0f, 1.0, 0.0, 0.0);
-			glRotatef(0.0f, 0.0, 1.0, 0.0);
-			glRotatef(0.0f, 0.0, 0.0, 1.0);
-			// Scale model
-			glScalef(0.0f,0.0f,0.0f);
-
+			// Start with a clear screen
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 			// Draw on screen
 			// Bind texture
 			glBindTexture(GL_TEXTURE_2D, vertexBuffer);
+			// Bind buffers
 			// Bind vertex buffer
 			glBindBuffer(GL_ARRAY_BUFFER, verticeBuffer);
 			glVertexPointer(3, GL_FLOAT, 0, NULL);
 			// Bind texture buffer
 			glBindBuffer(GL_ARRAY_BUFFER, textureBuffer);
 			glTexCoordPointer(2, GL_FLOAT, 0, NULL);
+			// Unbind buffer
+			glBindBuffer(GL_ARRAY_BUFFER, colorBuffer); 
+			glColorPointer(4, GL_FLOAT, 0, NULL);
+	
+			glPushMatrix();
 
-			// Draw
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT,  &indices);
+			// Move model
+			glTranslatef(0.0f,0.0f,20.0f);
+			// Rotate model
+			glRotatef(0.0f, 1.0, 0.0, 0.0);
+			glRotatef(0.0f, 0.0, 1.0, 0.0);
+			glRotatef(0.0f, 0.0, 0.0, 1.0);
+			// Scale model
+			glScalef(15.0f,15.0f,15.0f);
+
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			// Display
 			eglSwapBuffers(state.display, state.surface);
 
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glEnableClientState(GL_NORMAL_ARRAY);
+			glDisableClientState(GL_COLOR_ARRAY);
 			glPopMatrix();
 		}
     }
@@ -202,12 +228,12 @@ int modelEngine::initFonts()
 	texture_atlas_upload(atlas);
 
 	vec2 pen = {-400,150};
-    vec4 color = {.2,0.2,0.2,1};
+    vec4 color = {0.5,0.5,0.5,0.1};
 	GLuint bufIndex = atlas->id;
 
 	
 
-	add_text(font1, L"WA_test",&color, &pen, bufIndex);
+	add_text(font1, L"W",&color, &pen, bufIndex);
 
 	/*
 	vector_t * vVector = vector_new(sizeof(GLfloat));
@@ -547,11 +573,24 @@ void modelEngine::initialize(void)
 	init_model_proj(&state);
 	glEnable(GL_TEXTURE_2D);
 
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 
-	glCullFace(GL_BACK);
+	//glCullFace(GL_BACK);
 
-	glFrontFace(GL_CCW);
+	//glFrontFace(GL_CCW);
+
+	//glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+	//checkGLError();
+
+	glEnable(GL_BLEND);
+	checkGLError();
+	glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
+	checkGLError();
+	glBlendEquation(GL_FUNC_ADD);
+	checkGLError();
+
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glDepthRangef(0.0,1.0);
 
