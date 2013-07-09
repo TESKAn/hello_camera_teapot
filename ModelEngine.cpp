@@ -160,9 +160,15 @@ void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, 
 			// Unbind buffer
 			glBindBuffer(GL_ARRAY_BUFFER, 0); 
 
-			glEnableClientState(GL_COLOR_ARRAY);
+			// Enabling color array makes font dissapear
+			//glEnableClientState(GL_COLOR_ARRAY);
+
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 			glEnableClientState( GL_VERTEX_ARRAY );
+
+			//glDisable(GL_TEXTURE_2D);
+			//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+			//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_ADD);
 
 			// Start with a clear screen
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -177,7 +183,7 @@ void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, 
 			// Bind texture buffer
 			glBindBuffer(GL_ARRAY_BUFFER, textureBuffer);
 			glTexCoordPointer(2, GL_FLOAT, 0, NULL);
-			// Unbind buffer
+			// Bind color buffer
 			glBindBuffer(GL_ARRAY_BUFFER, colorBuffer); 
 			glColorPointer(4, GL_FLOAT, 0, NULL);
 	
@@ -192,6 +198,8 @@ void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, 
 			// Scale model
 			glScalef(15.0f,15.0f,15.0f);
 
+			glColor4f(0.0f, 0.6f, 1.0f, 0.1f);
+
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			// Display
@@ -200,6 +208,9 @@ void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, 
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glEnableClientState(GL_NORMAL_ARRAY);
 			glDisableClientState(GL_COLOR_ARRAY);
+			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			//glEnable(GL_TEXTURE_2D);
+			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 			glPopMatrix();
 		}
     }
@@ -228,7 +239,7 @@ int modelEngine::initFonts()
 	texture_atlas_upload(atlas);
 
 	vec2 pen = {-400,150};
-    vec4 color = {0.5,0.5,0.5,0.1};
+    vec4 color = {0.5,0.5,0.5,0.5};
 	GLuint bufIndex = atlas->id;
 
 	
@@ -582,12 +593,9 @@ void modelEngine::initialize(void)
 	//glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
 	//checkGLError();
 
-	glEnable(GL_BLEND);
-	checkGLError();
-	glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
-	checkGLError();
-	glBlendEquation(GL_FUNC_ADD);
-	checkGLError();
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
+	//glBlendEquation(GL_FUNC_ADD);
 
 	//glEnable(GL_BLEND);
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
