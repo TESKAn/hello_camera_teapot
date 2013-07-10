@@ -45,6 +45,7 @@ int main()
 
 	ME.initialize();
 
+
 	// Load shader
 	/*
 	int navballShader = ME.getNextShaderNumber();
@@ -62,6 +63,12 @@ int main()
 	infoPanel_BR = ME.loadWavefrontModel("/opt/vc/src/hello_pi/hello_camera_teapot/models/infoPanel_BR.obj");
 	infoPanel_TL = ME.loadWavefrontModel("/opt/vc/src/hello_pi/hello_camera_teapot/models/infoPanel_TL.obj");
 	infoPanel_TR = ME.loadWavefrontModel("/opt/vc/src/hello_pi/hello_camera_teapot/models/infoPanel_TR.obj");
+
+	// Create color for text
+	vec2 pen = {-0,0};
+    vec4 color = {1.0,0.4,0.1,0.8};
+	// Load some text for model
+	ME.createText(infoPanel_BL, ME.font1, L"Test", &color, &pen, 2.0f);
 	
 	
 
@@ -112,6 +119,10 @@ int main()
 
 	while(run)
 	{
+		//ME.testText(infoPanel_BL);
+
+		//ME.add_text(ME.font1, L"W",&color, &pen, 1);
+
 		/*
 		struct timespec sleeper, dummy ;
 		sleeper.tv_sec  = 0 ;
@@ -134,10 +145,6 @@ int main()
 			ME.setRotate(navBallModel, pitch, yaw, roll);
 			// Draw
 			ME.redrawModels();
-
-
-			// Test fonts
-			ME.initFonts();
 		}
 	}
 	stopApp();

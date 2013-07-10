@@ -100,11 +100,12 @@ int checkGLError()
 		printf( "%s\n", errorString );
 		assert( retVal );
 	}
+	/*
 	else if(retVal == 0)
 	{
 		printf( "%s\n", errorString );
 	}
-
+	*/
 	return retVal;
 
 }

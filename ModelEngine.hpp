@@ -50,6 +50,18 @@ struct SHADER_DATA
 	GLuint SourceColor;
 };
 
+struct TEXT_DATA
+{
+	GLuint vertexBuffer;
+	GLuint texBuffer;
+	vec4 fontColor;
+	int vertexBufferSize;
+	int texBufferSize;
+	int characters;
+	GLfloat offsetX;
+	GLfloat offsetY;
+	int textReady;
+};
 
 // Define class for everything
 class modelEngine
@@ -57,6 +69,8 @@ class modelEngine
 private:
 	// data for models
 	MODEL_T models[MAX_MODELS];
+	// Data for fonts
+	TEXT_DATA modelText[MAX_MODELS];
 	MODEL_STATE_T state;
 	int numModels;
 	GLuint shaderProgramHandles[MAX_SHADER_PROGRAMS];
@@ -64,10 +78,19 @@ private:
 	int numShaders;
 
 public:
+	texture_font_t *font1, *font2;
+	texture_atlas_t *atlas;
 	// Functions
+	// Constructor
+	modelEngine();
+	// Orphan GL buffer
+	int orphanArrayBuffer(GLuint buffer, int size);
+	// Create array of chars in GL buffer
+	int createText(int modelIndex, texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen, GLfloat Zoffset);
+	int testText(int modelIndex);
 	// Add text
 	//void add_text( vertex_buffer_t * buffer, texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen );
-	void add_text( texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen , GLuint vertexBuffer );
+	void add_text( texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen , GLuint vertexBuffer , GLfloat Zoffset);
 	// Initialize fonts
 	int initFonts();
 	// Set model shader program

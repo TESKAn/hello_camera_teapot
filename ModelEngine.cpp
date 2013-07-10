@@ -43,14 +43,216 @@ const char * shaderDataConst2 = shaderDataRAM2;
 const int* shaderDataLength1 = &shaderDataLengthRAM1;
 const int* shaderDataLength2 = &shaderDataLengthRAM2;
 
-texture_font_t *font1, *font2;
-texture_atlas_t *atlas;
+// Constructor
+modelEngine::modelEngine()
+{
+
+}
+
+
+// Orphan GL buffer
+int modelEngine::orphanArrayBuffer(GLuint buffer, int size)
+{
+	// Bind buffer
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	checkGLError();
+	// Orphan
+	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_STATIC_DRAW);
+	checkGLError();
+	// Unbind
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	return checkGLError();
+}
 
 // Text functions
+// Create text string with specified font
+// Begin at [0,0]
+// Store data to modelText[modelIndex]
+int modelEngine::createText(int modelIndex, texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen, GLfloat Zoffset)
+{
+	size_t i;
+	Zoffset = Zoffset * 400;
+	// Make room to store vertices and texture coordinates for 50 characters
+	GLfloat vertices[900];
+	int verticesIndex = 0;
+	GLfloat texCoordinates[600];
+	int texIndex = 0;
+	// Return -1 if model index is invalid
+	if(modelIndex == -1)
+	{
+		return -1;
+	}
+    float r = color->red, g = color->green, b = color->blue, a = color->alpha;
+    for( i=0; i<wcslen(text); ++i )
+    {
+        texture_glyph_t *glyph = texture_font_get_glyph( font, text[i] );
+        if( glyph != NULL )
+        {
+            int kerning = 0;
+            if( i > 0)
+            {
+                kerning = texture_glyph_get_kerning( glyph, text[i-1] );
+            }
+            pen->x += kerning;
+            int x0  = (int)( pen->x + glyph->offset_x );
+            int y0  = (int)( pen->y + glyph->offset_y );
+            int x1  = (int)( x0 + glyph->width );
+            int y1  = (int)( y0 - glyph->height );
+            float s0 = glyph->s0;
+            float t0 = glyph->t0;
+            float s1 = glyph->s1;
+			float t1 = glyph->t1;
 
-// --------------------------------------------------------------- add_text ---
-//void modelEngine::add_text( vertex_buffer_t * buffer, texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen )
-void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen, GLuint vertexBuffer )
+			GLfloat vertexCoordinates[] = {
+				x0,y0,Zoffset,
+				x0,y1,Zoffset,
+				x1,y1,Zoffset,
+				x0,y0,Zoffset,
+				x1,y1,Zoffset,
+				x1,y0,Zoffset,
+			};
+			for(int i = 0; i < 18; i++)
+			{
+				vertexCoordinates[i] = vertexCoordinates[i] / 400;
+			}
+			GLfloat textureCoordinates[] = {
+				s0,t0,
+				s0,t1,
+				s1,t1,
+				s0,t0,
+				s1,t1,
+				s1,t0,
+			};
+			// Copy vertex data
+			memcpy (vertices + verticesIndex, vertexCoordinates, 18 * sizeof(GLfloat));
+			// Increase pointer 
+			verticesIndex += 18;
+			// Copy texture data
+			memcpy (texCoordinates + texIndex, textureCoordinates, 12 * sizeof(GLfloat));
+			// Increase pointer
+			texIndex += 12;
+			// Increase pen position
+			pen->x += glyph->advance_x;
+		}
+	}
+	// Store data to buffers
+	// First, orphan GL buffers
+	// Check if text has been enabled
+	if(modelText[modelIndex].textReady != 0)
+	{
+		orphanArrayBuffer(modelText[modelIndex].vertexBuffer, modelText[modelIndex].vertexBufferSize);
+		orphanArrayBuffer(modelText[modelIndex].texBuffer, modelText[modelIndex].texBufferSize);
+	}
+
+	// Generate vertex buffer
+	glGenBuffers(1, &modelText[modelIndex].vertexBuffer);
+	// Bind buffer
+	glBindBuffer(GL_ARRAY_BUFFER, modelText[modelIndex].vertexBuffer);
+	// Create buffer data
+	glBufferData(GL_ARRAY_BUFFER, verticesIndex * sizeof(GLfloat), &vertices, GL_STATIC_DRAW);
+	checkGLError();
+	// Unbind buffer
+	glBindBuffer(GL_ARRAY_BUFFER, 0); 
+	// Store number of vertices
+	modelText[modelIndex].vertexBufferSize = verticesIndex;
+
+	// Generate texture buffer
+	glGenBuffers(1, &modelText[modelIndex].texBuffer);
+	// Bind buffer
+	glBindBuffer(GL_ARRAY_BUFFER, modelText[modelIndex].texBuffer);
+	// Create buffer data
+	glBufferData(GL_ARRAY_BUFFER, texIndex * sizeof(GLfloat), &texCoordinates, GL_STATIC_DRAW);
+	checkGLError();
+	// Unbind buffer
+	glBindBuffer(GL_ARRAY_BUFFER, 0); 
+	// Store number of vertices
+	modelText[modelIndex].texBufferSize = texIndex;
+
+	// Store number of characters
+	modelText[modelIndex].characters = wcslen(text);
+
+	// Store font color
+	modelText[modelIndex].fontColor.r = color->r;
+	modelText[modelIndex].fontColor.g = color->g;
+	modelText[modelIndex].fontColor.b = color->b;
+	modelText[modelIndex].fontColor.a = color->a;
+
+	modelText[modelIndex].offsetX = 0;
+	modelText[modelIndex].offsetY = 0;
+
+	modelText[modelIndex].textReady = 1;
+
+	return 0;
+}
+
+int modelEngine::testText(int modelIndex)
+{
+		//===========
+	// Test draw
+
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState( GL_VERTEX_ARRAY );
+
+	//glDisable(GL_TEXTURE_2D);
+	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_ADD);
+
+	// Start with a clear screen
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	checkGLError();
+	// Draw on screen
+	// Bind texture
+	glBindTexture(GL_TEXTURE_2D, atlas->id);
+	checkGLError();
+	// Bind buffers
+	// Bind vertex buffer
+	glBindBuffer(GL_ARRAY_BUFFER, modelText[modelIndex].vertexBuffer);
+	checkGLError();
+	glVertexPointer(3, GL_FLOAT, 0, NULL);
+	checkGLError();
+	// Bind texture buffer
+	glBindBuffer(GL_ARRAY_BUFFER, modelText[modelIndex].texBuffer);
+	checkGLError();
+	glTexCoordPointer(2, GL_FLOAT, 0, NULL);
+	checkGLError();
+	// Bind color buffer
+	//glBindBuffer(GL_ARRAY_BUFFER, colorBuffer); 
+	//glColorPointer(4, GL_FLOAT, 0, NULL);
+
+	glPushMatrix();
+	checkGLError();
+
+	// Move model
+	glTranslatef(0.0f,0.0f,20.0f);
+	// Rotate model
+	glRotatef(0.0f, 1.0, 0.0, 0.0);
+	glRotatef(0.0f, 0.0, 1.0, 0.0);
+	glRotatef(0.0f, 0.0, 0.0, 1.0);
+	// Scale model
+	glScalef(15.0f,15.0f,15.0f);
+
+	glColor4f(0.0f, 0.6f, 1.0f, 1.0f);
+
+	glDrawArrays(GL_TRIANGLES, 0, modelText[modelIndex].characters * 6);
+	checkGLError();
+
+	// Display
+	eglSwapBuffers(state.display, state.surface);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	//glEnable(GL_TEXTURE_2D);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glPopMatrix();
+
+	//===========
+	return 0;
+}
+
+
+void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen, GLuint vertexBuffer, GLfloat Zoffset)
 {
     size_t i;
     float r = color->red, g = color->green, b = color->blue, a = color->alpha;
@@ -74,15 +276,14 @@ void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, 
             float s1 = glyph->s1;
 			float t1 = glyph->t1;
 
-			//GLuint indices[6] = {0,1,2, 0,2,3};
 			GLfloat indices[6] = {0,1,2, 0,2,3};
 			GLfloat vertexCoordinates[] = {
-				x0,y0,0,
-				x0,y1,0,
-				x1,y1,0,
-				x0,y0,0,
-				x1,y1,0,
-				x1,y0,0,
+				x0,y0,Zoffset,
+				x0,y1,Zoffset,
+				x1,y1,Zoffset,
+				x0,y0,Zoffset,
+				x1,y1,Zoffset,
+				x1,y0,Zoffset,
 			};
 			for(int i = 0; i < 18; i++)
 			{
@@ -175,7 +376,7 @@ void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, 
 
 			// Draw on screen
 			// Bind texture
-			glBindTexture(GL_TEXTURE_2D, vertexBuffer);
+			glBindTexture(GL_TEXTURE_2D, atlas->id);
 			// Bind buffers
 			// Bind vertex buffer
 			glBindBuffer(GL_ARRAY_BUFFER, verticeBuffer);
@@ -198,7 +399,7 @@ void modelEngine::add_text(texture_font_t * font, wchar_t * text, vec4 * color, 
 			// Scale model
 			glScalef(15.0f,15.0f,15.0f);
 
-			glColor4f(0.0f, 0.6f, 1.0f, 0.1f);
+			glColor4f(0.0f, 0.6f, 1.0f, 0.5f);
 
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -241,84 +442,6 @@ int modelEngine::initFonts()
 	vec2 pen = {-400,150};
     vec4 color = {0.5,0.5,0.5,0.5};
 	GLuint bufIndex = atlas->id;
-
-	
-
-	add_text(font1, L"W",&color, &pen, bufIndex);
-
-	/*
-	vector_t * vVector = vector_new(sizeof(GLfloat));
-	
-	buffer = vertex_buffer_new( "vertex:3f,tex_coord:2f,color:4f" );
-
-
-	    float sy, cy, sp, cp, a, b;
-    wchar_t disp[100];
-
-    
-
-    vec2 pen = {-400,150};
-    vec4 color = {.2,0.2,0.2,1};
-    
-    add_text( vVector, font1,
-              L"freetypeGlesRpi", &color, &pen );
-
-    pen.x = -390;
-    pen.y = 140;
-    vec4 transColor = {1,0.3,0.3,0.6};
-
-    add_text( vVector, font1,
-              L"freetypeGlesRpi", &transColor, &pen );
-
-
-    pen.x = -190;
-    pen.y = 0;
-
-    add_text( vVector, font2,
-              L"Roller Racing Demo", &color, &pen );
-
-	int pitch = 10;
-	int yaw = 12;
-	int roll = 11;
-    
-    swprintf(disp, 60, L"Pitch %.1f, Yaw %.1f", pitch, yaw);
-    pen.x = -100;
-    pen.y = -100;
-
-    add_text( vVector, font2,
-              disp, &color, &pen );
-
-   // Clear the color buffer
-   glClear ( GL_COLOR_BUFFER_BIT );
-
-   
-    GLfloat mvp[] = {
-      a*cy*cp, -a*sy, -sp*a*cy, 0,
-      b*sy*cp, b*cy, -sp*b*cy, 0,
-      sp, 0, cp, 0,
-      0, 0, 0, 1.0
-    };
-
-    glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, (GLfloat *) mvp);
-
-   glBindTexture( GL_TEXTURE_2D, atlas->id );
-
-   glUniform1i ( samplerHandle, 0);
-
-   glEnable(GL_BLEND);
-   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_CULL_FACE);
-
-   glDrawArrays ( GL_TRIANGLES, 0, vVector->size/9 );
-
-   swapBuffers();
-   */
-
-
-
-
-
-
 }
 
 int modelEngine::setModelShader(int modelIndex, int shaderIndex)
@@ -525,10 +648,87 @@ int modelEngine::redrawModels()
 
 	// Cycle through all models and redraw them
 	WAVEFRONT_MODEL_T *modelData = NULL; 
-	int i = 0;
-	for(i = 0; i < numModels; i++)
+	int j = 0;
+	for(j = 0; j < numModels; j++)
 	{
-		draw_wavefront(models[i], NULL);
+		//===========
+		int i;
+		WAVEFRONT_MODEL_T *model = (WAVEFRONT_MODEL_T *)models[j];
+
+		// Check if model is enabled
+		if(model->modelEnabled)
+		{
+			// Save old matrix
+			glPushMatrix();
+
+			// Move model
+			glTranslatef(model->translate[0], model->translate[1], model->translate[2]);
+			// Rotate model
+			glRotatef(model->rotate[0], 1.0, 0.0, 0.0);
+			glRotatef(model->rotate[1], 0.0, 1.0, 0.0);
+			glRotatef(model->rotate[2], 0.0, 0.0, 1.0);
+			// Scale model
+			glScalef(model->scale[0], model->scale[1], model->scale[2]);
+
+			for (i=0; i<model->num_materials; i++) {
+				WAVEFRONT_MATERIAL_T *mat = model->material + i;
+				if (mat->texture == -1) continue;
+				glBindTexture(GL_TEXTURE_2D, mat->texture ? mat->texture:0);
+				if (mat->vbo[VBO_VERTEX]) {
+					glBindBuffer(GL_ARRAY_BUFFER, mat->vbo[VBO_VERTEX]);
+					glVertexPointer(3, GL_FLOAT, 0, NULL);
+				}
+				if (mat->vbo[VBO_NORMAL]) {   
+					glEnableClientState(GL_NORMAL_ARRAY);
+					glBindBuffer(GL_ARRAY_BUFFER, mat->vbo[VBO_NORMAL]);
+					glNormalPointer(GL_FLOAT, 0, NULL);
+				} else {
+					glDisableClientState(GL_NORMAL_ARRAY);
+				}
+				if (mat->vbo[VBO_TEXTURE]) {   
+					glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+					glBindBuffer(GL_ARRAY_BUFFER, mat->vbo[VBO_TEXTURE]);
+					glTexCoordPointer(2, GL_FLOAT, 0, NULL);
+				} else {
+					glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+				}
+				glDrawArrays(GL_TRIANGLES, 0, mat->numverts);
+			}
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			// Check if model has text data in it
+			if(modelText[j].textReady)
+			{
+				// If yes, draw fonts
+				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+				glEnableClientState( GL_VERTEX_ARRAY );
+
+				// Move model
+				glTranslatef(-1.0f, -0.15f, 0.0f);
+				// Draw on screen
+				// Bind texture atlas texture
+				glBindTexture(GL_TEXTURE_2D, atlas->id);
+				// Bind buffers
+				// Bind vertex buffer
+				glBindBuffer(GL_ARRAY_BUFFER, modelText[j].vertexBuffer);
+				glVertexPointer(3, GL_FLOAT, 0, NULL);
+				// Bind texture buffer
+				glBindBuffer(GL_ARRAY_BUFFER, modelText[j].texBuffer);
+				glTexCoordPointer(2, GL_FLOAT, 0, NULL);
+
+				glColor4f(modelText[j].fontColor.r, modelText[j].fontColor.g, modelText[j].fontColor.b, modelText[j].fontColor.a);
+
+				glDrawArrays(GL_TRIANGLES, 0, modelText[j].characters * 6);
+
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+				//glEnableClientState(GL_NORMAL_ARRAY);
+				//glDisableClientState(GL_COLOR_ARRAY);
+				glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+			}
+			// At end restore matrix
+			glPopMatrix();
+		}
 	}
 	eglSwapBuffers(state.display, state.surface);
 	return 0;
@@ -544,6 +744,11 @@ int modelEngine::loadWavefrontModel(char *path)
 		// If load successfull
 		if(models[numModels] != 0)
 		{
+			// Enable model
+			WAVEFRONT_MODEL_T *model = (WAVEFRONT_MODEL_T *)models[numModels];
+			model->modelEnabled = 1;
+			// Set model text
+			modelText[numModels].textReady = 0;
 			numModels++;
 			// Return model index
 			return numModels - 1;
@@ -584,26 +789,31 @@ void modelEngine::initialize(void)
 	init_model_proj(&state);
 	glEnable(GL_TEXTURE_2D);
 
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 
-	//glCullFace(GL_BACK);
+	glCullFace(GL_BACK);
 
-	//glFrontFace(GL_CCW);
+	glFrontFace(GL_CCW);
 
-	//glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-	//checkGLError();
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
+	glBlendEquation(GL_FUNC_ADD);
 
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
-	//glBlendEquation(GL_FUNC_ADD);
-
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glDepthRangef(0.0,1.0);
 
 	glEnable(GL_DEPTH_TEST);
 
+	// Alpha test enable
+	glEnable(GL_ALPHA_TEST);
+	// If fragment has alpha greater than value, draw it, otherwise discard
+	glAlphaFunc(GL_GREATER, 0.5);
+
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	//glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+
+	// Initialize fonts
+	initFonts();
 }
 
 int modelEngine::rotateModelIncrement(int modelIndex, char axis, float value)
