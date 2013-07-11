@@ -66,12 +66,11 @@ int main()
 
 	// Create color for text
 	vec2 pen = {-0,0};
-    vec4 color = {1.0,0.4,0.1,0.8};
+    vec4 color = {1.0,0.0,0.0,0.9};
+	vec3 offset = {-1.35,-0.2, 0};
 	// Load some text for model
-	ME.createText(infoPanel_BL, ME.font1, L"Test", &color, &pen, 2.0f);
+	ME.createText(infoPanel_BL, ME.font1, L"Test", &color, &pen, &offset);
 	
-	
-
 	// Set navball shader
 	//ME.setModelShader(navBallModel, navballShader);
 

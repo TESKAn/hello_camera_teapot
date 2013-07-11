@@ -68,14 +68,14 @@ int modelEngine::orphanArrayBuffer(GLuint buffer, int size)
 // Create text string with specified font
 // Begin at [0,0]
 // Store data to modelText[modelIndex]
-int modelEngine::createText(int modelIndex, texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen, GLfloat Zoffset)
+int modelEngine::createText(int modelIndex, texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen, vec3 * offset)
 {
 	size_t i;
-	Zoffset = Zoffset * 400;
+	//Zoffset = Zoffset * 400;
 	// Make room to store vertices and texture coordinates for 50 characters
-	GLfloat vertices[900];
+	GLfloat vertices[3600];
 	int verticesIndex = 0;
-	GLfloat texCoordinates[600];
+	GLfloat texCoordinates[2400];
 	int texIndex = 0;
 	// Return -1 if model index is invalid
 	if(modelIndex == -1)
@@ -104,12 +104,12 @@ int modelEngine::createText(int modelIndex, texture_font_t * font, wchar_t * tex
 			float t1 = glyph->t1;
 
 			GLfloat vertexCoordinates[] = {
-				x0,y0,Zoffset,
-				x0,y1,Zoffset,
-				x1,y1,Zoffset,
-				x0,y0,Zoffset,
-				x1,y1,Zoffset,
-				x1,y0,Zoffset,
+				x0,y0,0,
+				x0,y1,0,
+				x1,y1,0,
+				x0,y0,0,
+				x1,y1,0,
+				x1,y0,0,
 			};
 			for(int i = 0; i < 18; i++)
 			{
@@ -176,9 +176,8 @@ int modelEngine::createText(int modelIndex, texture_font_t * font, wchar_t * tex
 	modelText[modelIndex].fontColor.g = color->g;
 	modelText[modelIndex].fontColor.b = color->b;
 	modelText[modelIndex].fontColor.a = color->a;
-
-	modelText[modelIndex].offsetX = 0;
-	modelText[modelIndex].offsetY = 0;
+	// Store font offset on model
+	modelText[modelIndex].offset = *offset;
 
 	modelText[modelIndex].textReady = 1;
 
@@ -698,12 +697,32 @@ int modelEngine::redrawModels()
 			// Check if model has text data in it
 			if(modelText[j].textReady)
 			{
+				glPopMatrix();
 				// If yes, draw fonts
 				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 				glEnableClientState( GL_VERTEX_ARRAY );
 
+				// Alpha test enable
+				glEnable(GL_ALPHA_TEST);
+				// If fragment has alpha greater than value, draw it, otherwise discard
+				glAlphaFunc(GL_GREATER, 0.5);
+
+
+
+				// Save old matrix
+				glPushMatrix();
+
 				// Move model
-				glTranslatef(-1.0f, -0.15f, 0.0f);
+				glTranslatef(model->translate[0] + modelText[j].offset.x, model->translate[1] + modelText[j].offset.y, model->translate[2] + modelText[j].offset.z);
+				// Rotate model
+				glRotatef(model->rotate[0], 1.0, 0.0, 0.0);
+				glRotatef(model->rotate[1], 0.0, 1.0, 0.0);
+				glRotatef(model->rotate[2], 0.0, 0.0, 1.0);
+				// Scale model
+				glScalef(model->scale[0], model->scale[1], model->scale[2]);
+
+				// Move model
+				//glTranslatef(modelText[j].offset.x, modelText[j].offset.y, modelText[j].offset.z); 
 				// Draw on screen
 				// Bind texture atlas texture
 				glBindTexture(GL_TEXTURE_2D, atlas->id);
@@ -724,6 +743,8 @@ int modelEngine::redrawModels()
 				//glEnableClientState(GL_NORMAL_ARRAY);
 				//glDisableClientState(GL_COLOR_ARRAY);
 				glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+				// Alpha test disable
+				glDisable(GL_ALPHA_TEST);
 
 			}
 			// At end restore matrix
@@ -799,15 +820,9 @@ void modelEngine::initialize(void)
 	glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
 	glBlendEquation(GL_FUNC_ADD);
 
-
 	glDepthRangef(0.0,1.0);
 
 	glEnable(GL_DEPTH_TEST);
-
-	// Alpha test enable
-	glEnable(GL_ALPHA_TEST);
-	// If fragment has alpha greater than value, draw it, otherwise discard
-	glAlphaFunc(GL_GREATER, 0.5);
 
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	//glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
