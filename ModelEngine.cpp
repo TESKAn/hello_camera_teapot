@@ -68,9 +68,10 @@ int modelEngine::orphanArrayBuffer(GLuint buffer, int size)
 // Create text string with specified font
 // Begin at [0,0]
 // Store data to modelText[modelIndex]
-int modelEngine::createText(int modelIndex, texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen, vec3 * offset)
+int modelEngine::createText(int modelIndex, texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen, vec3 * offset, vec2 * scale)
 {
 	size_t i;
+	vec2 startPen = *pen;
 	//Zoffset = Zoffset * 400;
 	// Make room to store vertices and texture coordinates for 50 characters
 	GLfloat vertices[3600];
@@ -85,6 +86,19 @@ int modelEngine::createText(int modelIndex, texture_font_t * font, wchar_t * tex
     float r = color->red, g = color->green, b = color->blue, a = color->alpha;
     for( i=0; i<wcslen(text); ++i )
     {
+		// Check for special character
+		wchar_t currentChar = text[i];
+		wchar_t* currentCharPointer = text + i;
+		//wchar_t newLineChar = L"\n";
+		//if((text + i) == L"\n")
+		int result = wcsncmp(currentCharPointer, L"\n", 1);
+		if(result == 0)
+		{
+			// New line found
+			pen->x = startPen.x;
+			pen->y = startPen.y - font->height;
+			startPen.y = pen->y;
+		}
         texture_glyph_t *glyph = texture_font_get_glyph( font, text[i] );
         if( glyph != NULL )
         {
@@ -134,6 +148,12 @@ int modelEngine::createText(int modelIndex, texture_font_t * font, wchar_t * tex
 			// Increase pen position
 			pen->x += glyph->advance_x;
 		}
+	}
+	// Scale all data in X and Y direction
+	for(int i = 0; i < verticesIndex; i+=3)
+	{
+		vertices[i] = vertices[i] * scale->x;
+		vertices[i+1] = vertices[i+1] * scale->y;
 	}
 	// Store data to buffers
 	// First, orphan GL buffers

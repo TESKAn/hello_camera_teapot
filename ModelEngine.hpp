@@ -85,7 +85,7 @@ public:
 	// Orphan GL buffer
 	int orphanArrayBuffer(GLuint buffer, int size);
 	// Create array of chars in GL buffer
-	int createText(int modelIndex, texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen, vec3 * offset);
+	int createText(int modelIndex, texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen, vec3 * offset, vec2 * scale);
 	int testText(int modelIndex);
 	// Add text
 	//void add_text( vertex_buffer_t * buffer, texture_font_t * font, wchar_t * text, vec4 * color, vec2 * pen );

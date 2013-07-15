@@ -1,5 +1,7 @@
 
 // C++ application
+#include <wchar.h>
+
 #include "GLES/gl.h"
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
@@ -45,6 +47,13 @@ int main()
 
 	ME.initialize();
 
+	// Text test parameters
+	// Create color for text
+	vec2 pen = {-0,0};
+	vec2 scale = {0.5,0.5};
+    vec4 color = {1.0,0.0,0.0,0.9};
+	vec3 offset = {-1.35,-0.15, 0};
+
 
 	// Load shader
 	/*
@@ -64,12 +73,8 @@ int main()
 	infoPanel_TL = ME.loadWavefrontModel("/opt/vc/src/hello_pi/hello_camera_teapot/models/infoPanel_TL.obj");
 	infoPanel_TR = ME.loadWavefrontModel("/opt/vc/src/hello_pi/hello_camera_teapot/models/infoPanel_TR.obj");
 
-	// Create color for text
-	vec2 pen = {-0,0};
-    vec4 color = {1.0,0.0,0.0,0.9};
-	vec3 offset = {-1.35,-0.2, 0};
 	// Load some text for model
-	ME.createText(infoPanel_BL, ME.font1, L"Test", &color, &pen, &offset);
+	ME.createText(infoPanel_BL, ME.font1, L"Yaw:\n0.46 deg", &color, &pen, &offset, &scale);
 	
 	// Set navball shader
 	//ME.setModelShader(navBallModel, navballShader);
@@ -140,6 +145,20 @@ int main()
 			pitch = pitch * 0.05729577f;
 			roll = roll * 0.05729577f;
 			yaw = yaw * 0.05729577f;
+
+			// Try to print angle
+			wchar_t buffer [100];
+			int cx;
+			cx = swprintf ( buffer, 100, L"Yaw:\n%.2f deg", yaw );
+
+			pen.x = 0;
+			pen.y = 0;
+
+			ME.createText(infoPanel_BL, ME.font1, buffer, &color, &pen, &offset, &scale);
+
+
+			// Increase pitch by navball rotation
+			pitch += navBallRotation;
 			// Update angles
 			ME.setRotate(navBallModel, pitch, yaw, roll);
 			// Draw
