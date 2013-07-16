@@ -76,6 +76,12 @@ private:
 	SHADER_DATA shaders[MAX_SHADER_PROGRAMS];
 	int numShaders;
 
+	// Color and material vars
+	GLfloat mat_specular[4];
+	GLfloat mat_shininess[1];
+	GLfloat light_position[4];
+
+
 public:
 	texture_font_t *font1, *font2;
 	texture_atlas_t *atlas;

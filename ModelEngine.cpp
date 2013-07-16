@@ -849,6 +849,52 @@ void modelEngine::initialize(void)
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	//glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
 
+	// Enable lighting
+	
+
+	mat_specular[0] = 1.0;
+	mat_specular[1] = 1.0;
+	mat_specular[2] = 1.0;
+	mat_specular[3] = 1.0;
+
+	mat_shininess[0] = 50.0;
+
+	light_position[0] = 0.0;
+	light_position[1] = 5.0;
+	light_position[2] = 36.0;
+	light_position[3] = 0.0;
+
+	//glClearColor (0.0, 0.0, 0.0, 0.0);
+	GLfloat mat_ambient[] = { 1.0, 0.5, 0.5, 1.0 };
+	glShadeModel (GL_SMOOTH);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+	checkGLError();
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+	checkGLError();
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
+	checkGLError();
+
+	GLfloat light_ambient[] = { 0.5, 0.5, 0.5, 1.0 };
+	GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+	checkGLError();
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+	checkGLError();
+	glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+	checkGLError();
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	checkGLError();
+
+
+	//glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	//glLightfv(GL_LIGHT0, GL_AMBIENT, light_position);
+	checkGLError();
+	glEnable(GL_LIGHTING);
+	checkGLError();
+	glEnable(GL_LIGHT0);
+	checkGLError();
+
 	// Initialize fonts
 	initFonts();
 }
