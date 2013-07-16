@@ -160,8 +160,10 @@ int modelEngine::createText(int modelIndex, texture_font_t * font, wchar_t * tex
 	// Check if text has been enabled
 	if(modelText[modelIndex].textReady != 0)
 	{
-		orphanArrayBuffer(modelText[modelIndex].vertexBuffer, modelText[modelIndex].vertexBufferSize);
-		orphanArrayBuffer(modelText[modelIndex].texBuffer, modelText[modelIndex].texBufferSize);
+		glDeleteBuffers(1,  &modelText[modelIndex].vertexBuffer);
+		glDeleteBuffers(1,  &modelText[modelIndex].texBuffer);
+		//orphanArrayBuffer(modelText[modelIndex].vertexBuffer, modelText[modelIndex].vertexBufferSize);
+		//orphanArrayBuffer(modelText[modelIndex].texBuffer, modelText[modelIndex].texBufferSize);
 	}
 
 	// Generate vertex buffer

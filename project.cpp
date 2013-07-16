@@ -51,8 +51,8 @@ int main()
 	// Create color for text
 	vec2 pen = {-0,0};
 	vec2 scale = {0.5,0.5};
-    vec4 color = {1.0,0.0,0.0,0.9};
-	vec3 offset = {-1.35,-0.15, 0};
+    vec4 color = {1.0,1.0,0.0,0.9};
+	vec3 offset = {0.05,-0.05, 0.05};
 
 
 	// Load shader
@@ -90,12 +90,12 @@ int main()
 	ME.setRotate(cursorModel, navBallRotation, 0.0f, 0.0f);
 
 	// Set position and scale of infoPanel_BL model
-	ME.setTranslate(infoPanel_BL, 0.0f, -1.25f, 35.0f);
+	ME.setTranslate(infoPanel_BL, -1.5f, -1.25f, 35.0f);
 	ME.setScale(infoPanel_BL, 1.0f, 1.0f, 1.0f);
 	ME.setRotate(infoPanel_BL, navBallRotation, 0.0f, 0.0f);
 
 	// Set position and scale of infoPanel_BR model
-	ME.setTranslate(infoPanel_BR, 0.0f, -1.25f, 35.0f);
+	ME.setTranslate(infoPanel_BR, 1.5f, -1.25f, 35.0f);
 	ME.setScale(infoPanel_BR, 1.0f, 1.0f, 1.0f);
 	ME.setRotate(infoPanel_BR, navBallRotation, 0.0f, 0.0f);
 
@@ -149,7 +149,7 @@ int main()
 			// Try to print angle
 			wchar_t buffer [100];
 			int cx;
-			cx = swprintf ( buffer, 100, L"Yaw:\n%.2f deg", yaw );
+			cx = swprintf ( buffer, 100, L"Roll:\n%.2f deg\nPitch:\n%.2f deg\nYaw:\n%.2f deg", roll, pitch, yaw );
 
 			pen.x = 0;
 			pen.y = 0;
