@@ -713,6 +713,21 @@ int modelEngine::redrawModels()
 				} else {
 					glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 				}
+
+				//==========================
+				// Set model material propertiesOOTH);
+				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, model->ambientColor);
+				checkGLError();
+				glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, model->specularColor);
+				checkGLError();
+				glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, model->shininess);
+				checkGLError();
+				glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, model->difuseColor);
+				checkGLError();
+				//===========================
+
+
+
 				glDrawArrays(GL_TRIANGLES, 0, mat->numverts);
 			}
 			glBindBuffer(GL_ARRAY_BUFFER, 0);

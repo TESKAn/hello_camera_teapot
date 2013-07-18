@@ -151,7 +151,72 @@ static int load_wavefront_mtl(const char *mtlname, WAVEFRONT_MODEL_T *model)
 		switch (s[0]) {
 		case '#': break; // comment
 		case '\r': case '\n': case '\0': break; // blank line
-
+		case 'd':
+			{
+				if(sscanf(s, "d %f", model->transparency) == 1) 
+				{
+					s += 1;
+				}
+				break;
+			}
+		case 'N':
+			{
+				if(s[1] == 's')
+				{
+					if(sscanf(s, "Ns %f", model->shininess) == 1) 
+					{
+						s += 1;
+					}
+				}
+				break;
+			}
+		case 'K':
+			{
+				switch(s[1])
+				{
+				case 'a':
+					{
+						if(sscanf(s, "Ka %f %f %f %f", model->ambientColor, model->ambientColor+1, model->ambientColor+2, model->ambientColor+3) == 4) 
+						{
+							s += 4;
+						}
+						else if(sscanf(s, "Ka %f %f %f", model->ambientColor, model->ambientColor+1, model->ambientColor+2) == 3) 
+						{
+							s += 3;
+							model->ambientColor[3] = 1;
+						}
+						break;
+					}
+				case 'd':
+					{
+						if(sscanf(s, "Kd %f %f %f %f", model->difuseColor, model->difuseColor+1, model->difuseColor+2, model->difuseColor+3) == 4) 
+						{
+							s += 4;
+						}
+						else if(sscanf(s, "Kd %f %f %f", model->difuseColor, model->difuseColor+1, model->difuseColor+2) == 3) 
+						{
+							s += 3;
+							model->difuseColor[3] = 1;
+						}
+						break;
+					}
+				case 's':
+					{
+						if(sscanf(s, "Ks %f %f %f %f", model->specularColor, model->specularColor+1, model->specularColor+2, model->specularColor+3) == 4) 
+						{
+							s += 4;
+						}
+						else if(sscanf(s, "Ks %f %f %f", model->specularColor, model->specularColor+1, model->specularColor+2) == 3) 
+						{
+							s += 3;
+							model->specularColor[3] = 1;
+						}
+						break;
+					}
+				}
+				break;
+			}
+		// If texture location
 		case 'm':
 			{
 				if(s[1] == 'a' && s[2] == 'p')

@@ -60,6 +60,13 @@ typedef struct wavefront_model_s {
 	GLfloat scale[3];
 	// Shader program to use
 	int shader;
+	// Material section
+	GLfloat ambientColor[4];
+	GLfloat difuseColor[4];
+	GLfloat specularColor[4];
+	GLfloat shininess[1];
+	GLfloat emmisionColor[4];
+	GLfloat transparency[1];
 	// Mark if model is enabled for display
 	int modelEnabled;
 } WAVEFRONT_MODEL_T;
