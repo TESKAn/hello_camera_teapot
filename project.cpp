@@ -54,17 +54,6 @@ int main()
     vec4 color = {1.0,1.0,0.0,0.9};
 	vec3 offset = {0.05,-0.05, 0.05};
 
-
-	// Load shader
-	/*
-	int navballShader = ME.getNextShaderNumber();
-	if(navballShader != -1)
-	{
-		GLuint vertex = ME.loadShader("/opt/vc/src/hello_pi/hello_camera_teapot/SimpleVertex.glsl", GL_VERTEX_SHADER, navballShader);
-		GLuint fragment = ME.loadShader("/opt/vc/src/hello_pi/hello_camera_teapot/SimpleFragment.glsl", GL_FRAGMENT_SHADER, navballShader);
-		GLuint programHandle = ME.linkShaderProgram(navballShader);
-	}*/
-
 	// Load models
 	navBallModel = ME.loadWavefrontModel("/opt/vc/src/hello_pi/hello_camera_teapot/models/navball.obj");
 	cursorModel = ME.loadWavefrontModel("/opt/vc/src/hello_pi/hello_camera_teapot/models/navballHousing.obj");
@@ -75,9 +64,6 @@ int main()
 
 	// Load some text for model
 	ME.createText(infoPanel_BL, ME.font1, L"Yaw:\n0.46 deg", &color, &pen, &offset, &scale);
-	
-	// Set navball shader
-	//ME.setModelShader(navBallModel, navballShader);
 
 	// Set position and scale of navBall model
 	ME.setTranslate(navBallModel, 0.0f, -1.25f, 35.0f);
@@ -119,21 +105,8 @@ int main()
 
 	pthread_create(&pSerialThread, NULL, serialThread, (void *) &serialData);
 
-
-
 	while(run)
 	{
-		//ME.testText(infoPanel_BL);
-
-		//ME.add_text(ME.font1, L"W",&color, &pen, 1);
-
-		/*
-		struct timespec sleeper, dummy ;
-		sleeper.tv_sec  = 0 ;
-		sleeper.tv_nsec = 100000000;
-		nanosleep (&sleeper, &dummy);
-		ME.rotateModelIncrement(cursorModel, 'x', 1.0f);
-		*/
 		if(serialData.status == 1)
 		{
 			serialData.status = 0;
@@ -155,7 +128,6 @@ int main()
 			pen.y = 0;
 
 			ME.createText(infoPanel_BL, ME.font1, buffer, &color, &pen, &offset, &scale);
-
 
 			// Increase pitch by navball rotation
 			pitch += navBallRotation;
