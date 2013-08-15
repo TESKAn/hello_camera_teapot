@@ -1,4 +1,1 @@
-hello_videocube
-===============
-
-Sample for Raspberry Pi that uses egl_render to display video on an animated cube.
+Hacked together raspivid and hello_teapot to create hello_camera_teapot, application that uses openGL ES to overlay data over live video from raspicam.

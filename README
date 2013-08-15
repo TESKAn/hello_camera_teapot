@@ -1,17 +1,1 @@
-RaspiCam Documentation
-======================
-
-RaspiVid application cleaned to not require input parameters. Use as base for setting up other projects like trying to get video to texture...
-
-Next step (27.5.2013 19:30) - setup decoder and get it to fire callback function, to get data into buffer. Work in progress, test stdout.
-
-NextNext step (27.5.2013.20:09) - raspicam can output EGL image, test this hypotesis.
-
-28.5.2013 22:31 - buffer from camera too small, try using encoder -> decoder to get whole image
-
-
-=========================
-
-
-
-
+Hacked together raspivid and hello_teapot to create hello_camera_teapot, application that uses openGL ES to overlay data over live video from raspicam.
